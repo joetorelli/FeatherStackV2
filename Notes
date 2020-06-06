@@ -1,0 +1,57 @@
+oled notes (I2C):
+
+//includes needed
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+//set screen size
+#define SCREEN_WIDTH 128    // OLED display width, in pixels
+#define SCREEN_HEIGHT 64    // OLED display height, in pixels
+//reset pin may vary
+#define OLED_RESET     -1   // Reset pin # (or -1 if sharing Arduino reset pin)
+#define OLED_ADR    0x3c    //i2c address
+
+// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+setup()
+{
+// SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
+  if(!display.begin(SSD1306_SWITCHCAPVCC, OLED_ADR))        //test to see if oled detected
+  { 
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;); // Don't proceed, loop forever
+  }
+
+  // Clear the buffer
+  display.clearDisplay();
+  // display.display() is NOT necessary after every single drawing command,
+  // unless that's what you want...rather, you can batch up a bunch of
+  // drawing operations and then update the screen all at once by calling
+  display.display();        //print to screen
+
+}
+
+//OLED commands
+// Invert and restore display
+  display.invertDisplay(true);
+
+void testdrawline() {
+  int16_t i;
+
+  display.clearDisplay(); // Clear display buffer
+
+  for(i=0; i<display.width(); i+=4) 
+  {
+    display.drawLine(0, 0, i, display.height()-1, WHITE);
+    display.display(); // Update screen with each newly-drawn line
+    delay(1);
+  }
+  for(i=0; i<display.height(); i+=4) 
+  {
+    display.drawLine(0, 0, display.width()-1, i, WHITE);
+    display.display();
+    delay(1);
+  }
+
