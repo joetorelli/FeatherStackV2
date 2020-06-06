@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "OLED.h"
-#include "settings.h"
-#include "sensor_readings.h"
+//#include "settings.h"
+//#include "sensor_readings.h"
 
 //read and display button press
 void DisplaySwitches(Adafruit_SSD1306 *Disp, OLED_SW *SS)

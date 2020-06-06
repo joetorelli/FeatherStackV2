@@ -16,7 +16,7 @@
 #include "sensor_readings.h" // The order is important!
 #include "network_config.h"
 #include "clock.h"
-
+#include "SD_Card.h"
 #include <ezTime.h>
 #include <TaskScheduler.h>
 
@@ -301,10 +301,8 @@ void loop()
 
 void sensor_update()
 {
-   DEBUGPRINTLN("Read sensor");
+   DEBUGPRINTLN("Read sensor***********");
    ReadSensor(&bme, &Sensor_Values);
-
-   // DEBUGPRINTLN("Display sensor");
-   // DisplaySensor(&OLED_Display, &Sensor_Values);
-   // OLED_Display.display();
+   DEBUGPRINTLN("Write SD**************");
+   Refresh_SD(&RTCClock, &Sensor_Values);
 }

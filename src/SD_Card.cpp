@@ -1,3 +1,4 @@
+#include "Arduino.h"
 #include "SD_Card.h"
 
 void listDir(fs::FS &fs, const char *dirname, uint8_t levels)
@@ -151,60 +152,98 @@ void deleteFile(fs::FS &fs, const char *path)
         Serial.println("Delete failed");
     }
 }
-/*
-void Refresh_SD(DateTime *RTCClock, Adafruit_BME280 *bme)
+
+void Refresh_SD(DateTime *RTCClk, BME_Sensor *SenVal)
+
 {
-    float ftemperature = 0;
-    float fhumidity = 0;
-    //float fpressure = 0;
-    //float faltitude = 0;
 
-    //read sensor ad load vars
-    ftemperature = bme->readTemperature();
-    fhumidity = bme->readHumidity();
-    //fpressure = bme->readPressure() / 100.0F;
-    //faltitude = bme->readAltitude(SEALEVELPRESSURE_HPA);
+    String TimeStr = "";
 
-    String TimeStr;
-    TimeStr = timezone->dateTime("Y m d H:i:s ");
-    TimeStr = TimeStr + " T: " + ftemperature + " H: " + fhumidity;
-    DEBUG_PRINT("TimeStr= ");
-    DEBUG_PRINTLN(TimeStr);
+    if (RTCClk->year() < 10)
+    {
+        TimeStr = "0";
+    }
+    TimeStr = TimeStr + RTCClk->year();
+
+    TimeStr = TimeStr + "/";
+
+    if (RTCClk->month() < 10)
+    {
+        TimeStr = TimeStr + "0";
+    }
+    TimeStr = TimeStr + RTCClk->month();
+
+    TimeStr = TimeStr + "/";
+
+    if (RTCClk->day() < 10)
+    {
+        TimeStr = TimeStr + "0";
+    }
+    TimeStr = TimeStr + RTCClk->day();
+
+    TimeStr = TimeStr + " , ";
+
+    if (RTCClk->hour() < 10)
+    {
+        TimeStr = TimeStr + "0";
+    }
+    TimeStr = TimeStr + RTCClk->hour();
+
+    TimeStr = TimeStr + ":";
+
+    if (RTCClk->minute() < 10)
+    {
+        TimeStr = TimeStr + "0";
+    }
+    TimeStr = TimeStr + RTCClk->minute();
+
+    TimeStr = TimeStr + ":";
+
+    if (RTCClk->second() < 10)
+    {
+        TimeStr = TimeStr + "0";
+    }
+    TimeStr = TimeStr + RTCClk->second();
+
+    TimeStr = TimeStr + " T: " + SenVal->f_temperature + " H: " + SenVal->f_humidity;
+    DEBUGPRINT("*****************************************TimeStr= ");
+    DEBUGPRINTLN(TimeStr);
 
     File myFile;
     myFile = SD.open("/datalog.txt", FILE_APPEND);
     if (myFile)
     {
-        DEBUG_PRINTLN("Writing Time");
+        DEBUG_PRINTLN("Writing Time/Temp");
         myFile.println(TimeStr);
         myFile.close();
         DEBUG_PRINTLN("Closed File");
     }
     else
     {
-        Serial.println("File Error");
+        DEBUG_PRINTLN("File Error");
     }
+
     // re-open the file for reading:
     myFile = SD.open("/datalog.txt");
     if (myFile)
     {
-        DEBUG_PRINTLN("Read File");
 
         // read from the file until there's nothing else in it:
         while (myFile.available())
         {
             Serial.write(myFile.read());
+            DEBUG_PRINTLN("Read File");
         }
         // close the file:
         myFile.close();
+        DEBUG_PRINTLN("File Closed");
     }
     else
     {
         // if the file didn't open, print an error:
-        Serial.println("error opening");
+        DEBUG_PRINTLN("error opening");
     }
 }
-*/
 
 /* examples
     listDir(SD, "/", 0);
