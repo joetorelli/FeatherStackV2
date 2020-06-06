@@ -209,39 +209,38 @@ void Refresh_SD(DateTime *RTCClk, BME_Sensor *SenVal)
     DEBUGPRINT("*****************************************TimeStr= ");
     DEBUGPRINTLN(TimeStr);
 
+ 
     File myFile;
     myFile = SD.open("/datalog.txt", FILE_APPEND);
     if (myFile)
     {
-        DEBUG_PRINTLN("Writing Time/Temp");
+        DEBUG_PRINTLN("Writing Time");
         myFile.println(TimeStr);
         myFile.close();
         DEBUG_PRINTLN("Closed File");
     }
     else
     {
-        DEBUG_PRINTLN("File Error");
+        Serial.println("File Error");
     }
-
     // re-open the file for reading:
     myFile = SD.open("/datalog.txt");
     if (myFile)
     {
+        DEBUG_PRINTLN("Read File");
 
         // read from the file until there's nothing else in it:
         while (myFile.available())
         {
             Serial.write(myFile.read());
-            DEBUG_PRINTLN("Read File");
         }
         // close the file:
         myFile.close();
-        DEBUG_PRINTLN("File Closed");
     }
     else
     {
         // if the file didn't open, print an error:
-        DEBUG_PRINTLN("error opening");
+        Serial.println("error opening");
     }
 }
 

@@ -263,6 +263,49 @@ void setup()
    }
    OLED_Display.display();
    delay(1000);
+
+  /*********************  SD Card  *************************/
+  SD.begin(SD_CS);
+  if (!SD.begin(SD_CS))
+  {
+    DEBUGPRINTLN("SD Card failed");
+    return;
+  }
+
+  uint8_t CardType = SD.cardType();
+
+  if (CardType == CARD_NONE)
+  {
+    DEBUGPRINTLN("No SD Card Found");
+    return;
+  }
+
+  DEBUGPRINT("SD Card Type: ");
+
+  if (CardType == CARD_MMC)
+  {
+    DEBUGPRINTLN("MMC");
+  }
+  else if (CardType == CARD_SD)
+  {
+    DEBUGPRINTLN("SCSC");
+  }
+  else if (CardType == CARD_SDHC)
+  {
+    DEBUGPRINTLN("SDHC");
+  }
+  else
+  {
+    DEBUGPRINTLN("Unkown Type");
+  }
+  String Tempp;
+//   uint64_t CardSize = SD.cardSize() / (1024 * 1024);
+//   Serial.printf("SD Card Size: %lluMB\n", CardSize);
+//   Serial.printf("Total Space: %lluMB\n", SD.totalBytes() / (1024 * 1024));
+//   Serial.printf("Used Space: %lluMB\n", SD.usedBytes() / (1024 * 1024));
+//   listDir(SD, "/", 0);
+   delay(1000);
+   Refresh_SD(&RTCClock, &Sensor_Values);
 }
 
 /****************   loop   ********************/
