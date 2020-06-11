@@ -2,14 +2,12 @@
    adafruit feather esp32
    adalogger SDcard, PCF8523 RTC
    OLED feather wing 128x32
-
+// Date and time functions using a PCF8523 RTC connected via I2C and Wire lib
    purpose: log data
 *************************************/
 
 #include <Arduino.h>
 #include <WiFi.h>
-
-// Date and time functions using a PCF8523 RTC connected via I2C and Wire lib
 #include "Wire.h"
 #include "OLED.h"
 #include "settings.h"        // The order is important!
@@ -112,7 +110,7 @@ void setup()
    OLED_Display.println("");
    OLED_Display.display();
 
-   byte count = 0;
+   byte count = 0; //used for network and ntp timeout
 
    //connect to wifi
    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -136,7 +134,7 @@ void setup()
       }
    }
 
-   if (count > 20) //reboot
+   if (count > 20) //if not connected reboot
    {
       ESP.restart();
    }
@@ -185,11 +183,12 @@ void setup()
    {
       ESP.restart();
    }
-   else
+   else //contimue
    {
       count = 0;
    }
 
+   // get ntp time
    DEBUGPRINTLN("UTC: " + UTC.dateTime());
    CentralTZ.setLocation("America/Chicago");
    String NTPTime = CentralTZ.dateTime("Y/M/d H:i:s");
@@ -198,7 +197,7 @@ void setup()
    OLED_Display.println(NTPTime);
 
    /*******************  rtc  **************************/
-   //convert string to int for rtc
+   //convert string from ntp to int for rtc
    String Y = CentralTZ.dateTime("Y");
    int Year = Y.toInt();
    String M = CentralTZ.dateTime("m");
@@ -212,6 +211,7 @@ void setup()
    String S = CentralTZ.dateTime("s");
    int Sec = S.toInt();
 
+   //init rtc
    if (!rtc.begin())
    {
       DEBUGPRINTLN("Couldn't find RTC");
@@ -231,6 +231,7 @@ void setup()
 
    if (!rtc.initialized())
    {
+      //update rtc with ntp time
       DEBUGPRINTLN("RTC is NOT running! - Setting Clock to NTP");
       rtc.adjust(DateTime(Year, Month, Day, Hour, Min, Sec));
       DEBUGPRINTLN("Clock Set");
@@ -239,16 +240,20 @@ void setup()
 
    else
    {
+      //update rtc with ntp time
       DEBUGPRINTLN("RTC Running - Updating Clock to NTP");
       rtc.adjust(DateTime(Year, Month, Day, Hour, Min, Sec));
       DEBUGPRINTLN("Clock Set");
       OLED_Display.print("RTC set to NTP");
    }
-   /**********  init i2c sensor  ************/
 
+   //stop asking for internet ntp time
+   void setInterval(uint16_t seconds = 0);
+
+   /**********  init i2c sensor  ************/
    OLED_Display.print("Init Sensor");
 
-   status = bme.begin(BME280_ADDRESS_ALTERNATE); // get status of tft
+   status = bme.begin(BME280_ADDRESS_ALTERNATE); // get status of sensor
 
    if (!status) // test status
    {
@@ -264,55 +269,55 @@ void setup()
    OLED_Display.display();
    delay(1000);
 
-  /*********************  SD Card  *************************/
-  SD.begin(SD_CS);
-  if (!SD.begin(SD_CS))
-  {
-    DEBUGPRINTLN("SD Card failed");
-    return;
-  }
+   /*********************  SD Card  *************************/
+   SD.begin(SD_CS);
+   if (!SD.begin(SD_CS))
+   {
+      DEBUGPRINTLN("SD Card failed");
+      return;
+   }
 
-  uint8_t CardType = SD.cardType();
+   uint8_t CardType = SD.cardType();
 
-  if (CardType == CARD_NONE)
-  {
-    DEBUGPRINTLN("No SD Card Found");
-    return;
-  }
+   if (CardType == CARD_NONE)
+   {
+      DEBUGPRINTLN("No SD Card Found");
+      return;
+   }
 
-  DEBUGPRINT("SD Card Type: ");
+   DEBUGPRINT("SD Card Type: ");
 
-  if (CardType == CARD_MMC)
-  {
-    DEBUGPRINTLN("MMC");
-  }
-  else if (CardType == CARD_SD)
-  {
-    DEBUGPRINTLN("SCSC");
-  }
-  else if (CardType == CARD_SDHC)
-  {
-    DEBUGPRINTLN("SDHC");
-  }
-  else
-  {
-    DEBUGPRINTLN("Unkown Type");
-  }
-  String Tempp;
-//   uint64_t CardSize = SD.cardSize() / (1024 * 1024);
-//   Serial.printf("SD Card Size: %lluMB\n", CardSize);
-//   Serial.printf("Total Space: %lluMB\n", SD.totalBytes() / (1024 * 1024));
-//   Serial.printf("Used Space: %lluMB\n", SD.usedBytes() / (1024 * 1024));
-//   listDir(SD, "/", 0);
+   if (CardType == CARD_MMC)
+   {
+      DEBUGPRINTLN("MMC");
+   }
+   else if (CardType == CARD_SD)
+   {
+      DEBUGPRINTLN("SCSC");
+   }
+   else if (CardType == CARD_SDHC)
+   {
+      DEBUGPRINTLN("SDHC");
+   }
+   else
+   {
+      DEBUGPRINTLN("Unkown Type");
+   }
+   String Tempp;
+   //   uint64_t CardSize = SD.cardSize() / (1024 * 1024);
+   //   Serial.printf("SD Card Size: %lluMB\n", CardSize);
+   //   Serial.printf("Total Space: %lluMB\n", SD.totalBytes() / (1024 * 1024));
+   //   Serial.printf("Used Space: %lluMB\n", SD.usedBytes() / (1024 * 1024));
+   //   listDir(SD, "/", 0);
    delay(1000);
-   Refresh_SD(&RTCClock, &Sensor_Values);
 }
 
 /****************   loop   ********************/
 void loop()
 {
+   // start task manager
    runner.execute();
-   events();
+   //events();
    DEBUGPRINTLN("Read clock");
    RTCClock = rtc.now(); //read hardware clock
 
