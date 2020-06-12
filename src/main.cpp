@@ -316,9 +316,10 @@ void setup()
 void loop()
 {
    // start task manager
-   runner.execute();
+   //runner.execute();
    //events();
-   DEBUGPRINTLN("Read clock");
+
+ //  DEBUGPRINTLN("Read clock");
    RTCClock = rtc.now(); //read hardware clock
 
    if (secondChanged())
@@ -327,6 +328,7 @@ void loop()
    }
 
    OLED_Display.setCursor(0, 0);
+/*   
    DEBUGPRINTLN("Read switches");
    ReadSwitches(&Switch_State);
 
@@ -342,6 +344,76 @@ void loop()
 
    //delay(10);
    //yield();
+*/
+int Range;
+int Range2;
+int Light;
+int SRFStat;
+// tell sensor to read echos
+   //adr = 0xE0 i2c addressing is high 7 bit (right shift 1) so send 0x70
+Wire.beginTransmission(0x70);    //transmit to device
+Wire.write(byte(0x00));          //command register
+Wire.write(byte(0X50));          //0x50=inches, 0x51=cent; 0x52=microsec
+Wire.endTransmission();
+
+
+//wait for reading
+//delay(70);                       //wait for return, max 65ms
+Wire.beginTransmission(0x70);    //transmit to device
+Wire.write(byte(0x00));          //command register
+Wire.endTransmission();
+
+do
+{
+Wire.requestFrom(0x70,0);
+if (Wire.available())
+{
+SRFStat = Wire.read();
+}
+OLED_Display.print("SRFStat:" + SRFStat);
+OLED_Display.display();
+} while (SRFStat = 255);
+
+Wire.beginTransmission(0x70);    //transmit to device
+Wire.write(byte(0x01));          //light register
+Wire.endTransmission();
+
+Wire.requestFrom(0x70,1);     // read two register hi and low buyte
+if (Wire.available())
+{
+   Light = Wire.read();
+   //Light = Light << 8;
+   //Light |= Wire.read();
+   OLED_Display.println(Light);
+}   
+//goto firsst echo register
+Wire.beginTransmission(0x70);
+Wire.write(byte(0x02));       //high byte
+Wire.endTransmission();
+//get values
+Wire.requestFrom(0x70,2);     // read two registers hi and low buyte
+if (2<=Wire.available())
+{
+   Range = Wire.read();
+   Range = Range << 8;
+   Range |= Wire.read();
+   OLED_Display.println(Range);
+}
+// Wire.beginTransmission(0x70);
+// Wire.write(byte(0x02));       //high byte
+// Wire.endTransmission();
+// //get values
+// Wire.requestFrom(0x70,4);     // read two registers hi and low buyte
+// if (2<=Wire.available())
+// {
+//    Range2 = Wire.read();
+//    Range2 = Range2 << 8;
+//    Range2 |= Wire.read();
+//    OLED_Display.println(Range2);
+// }
+
+
+
 
    OLED_Display.display(); // update OLED_Display
    //delay(2000);
