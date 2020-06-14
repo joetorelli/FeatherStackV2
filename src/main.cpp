@@ -46,12 +46,12 @@ Adafruit_BME280 bme;
 /********  tasks callback functions  *********/
 void sensor_update();
 //void clock_update();
-//void SD_Update();
+void SD_Update();
 
 /***************  task scheduler  **************************/
-Task t1_Update(10000, TASK_FOREVER, &sensor_update); //can not pass vars with pointer in this function
+Task t1_Update(1000, TASK_FOREVER, &sensor_update); //can not pass vars with pointer in this function
 //Task t2_clock(1000, TASK_FOREVER, &clock_update);
-//Task t3_SDCard(15000, TASK_FOREVER, &SD_Update);
+Task t3_SDCard(10000, TASK_FOREVER, &SD_Update);
 //Task t5_indicators(2000, TASK_FOREVER, &indicators);
 Scheduler runner;
 
@@ -74,10 +74,10 @@ void setup()
    runner.init();
    runner.addTask(t1_Update);
    //runner.addTask(t2_clock);
-   //runner.addTask(t3_SDCard);
+   runner.addTask(t3_SDCard);
    t1_Update.enable();
    //t2_clock.enable();
-   //t3_SDCard.enable();
+   t3_SDCard.enable();
 
    /********************* oled  ********************/
    // SSD1306_SWITCHCAPVCC = generate OLED_Display voltage from 3.3V internally
@@ -209,7 +209,7 @@ void setup()
    int Month = M.toInt();
    String D = CentralTZ.dateTime("d");
    int Day = D.toInt();
-   String H = CentralTZ.dateTime("h");
+   String H = CentralTZ.dateTime("H");
    int Hour = H.toInt();
    String m = CentralTZ.dateTime("i");
    int Min = m.toInt();
@@ -354,6 +354,11 @@ void loop()
    DEBUGPRINTLN("Read switches");
    ReadSwitches(&Switch_State);
 
+   DEBUGPRINTLN("Read Ping");
+   SRFPing();
+   Light = SRFLight();
+   SRFDistance(&SRFDist);
+
    DEBUGPRINTLN("Display Switches");
    DisplaySwitches(&OLED_Display, &Switch_State);
 
@@ -361,9 +366,10 @@ void loop()
    OLED_Date(&OLED_Display, &RTCClock);
    //OLED_Day(&OLED_Display, &RTCClock);
 
-   DEBUGPRINTLN("Display sensor");
+   DEBUGPRINTLN("Display Env sensor");
    DisplaySensor(&OLED_Display, &Sensor_Values);
 
+   DEBUGPRINTLN("Display SFR Sensor");
    OLED_Light(&OLED_Display, Light);
    OLED_Range(&OLED_Display, &SRFDist);
 
@@ -375,9 +381,14 @@ void sensor_update()
 {
    DEBUGPRINTLN("Read sensor***********");
    ReadSensor(&bme, &Sensor_Values);
+
+
+}
+
+void SD_Update()
+{
+
    DEBUGPRINTLN("Write SD**************");
    Refresh_SD(&RTCClock, &Sensor_Values);
-   SRFPing();
-   Light = SRFLight();
-   SRFDistance(&SRFDist);
+
 }
