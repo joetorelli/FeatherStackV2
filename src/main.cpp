@@ -9,11 +9,12 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include "Wire.h"
+#include "SRF.h"
 #include "OLED.h"
 #include "settings.h"        // The order is important!
 #include "sensor_readings.h" // The order is important!
 #include "network_config.h"
-#include "clock.h"
+
 #include "SD_Card.h"
 #include <ezTime.h>
 #include <TaskScheduler.h>
@@ -53,6 +54,10 @@ Task t1_Update(10000, TASK_FOREVER, &sensor_update); //can not pass vars with po
 //Task t3_SDCard(15000, TASK_FOREVER, &SD_Update);
 //Task t5_indicators(2000, TASK_FOREVER, &indicators);
 Scheduler runner;
+
+/*************************  srf08   ********************/
+struct SRFRanges SRFDist;
+int Light = 0;
 
 /*******************************************************/
 /***********************   setup   *********************/
@@ -304,11 +309,28 @@ void setup()
       DEBUGPRINTLN("Unkown Type");
    }
    String Tempp;
+
    //   uint64_t CardSize = SD.cardSize() / (1024 * 1024);
    //   Serial.printf("SD Card Size: %lluMB\n", CardSize);
    //   Serial.printf("Total Space: %lluMB\n", SD.totalBytes() / (1024 * 1024));
    //   Serial.printf("Used Space: %lluMB\n", SD.usedBytes() / (1024 * 1024));
    //   listDir(SD, "/", 0);
+
+   /*****************************   srf08   *************************************/
+   //srf max reliable range = 6meters
+   //set max range
+   Wire.beginTransmission(SRF_ADDR); //transmit to device
+   Wire.write(byte(SRF_ECHO_H));     //range register
+   Wire.write(byte(0x8C));           //max range 0x00=43mm,0x01=86mm,0x18=1000mm,0x8C=6000mm
+   Wire.endTransmission();
+
+   //set gain
+   // Wire.beginTransmission(0x70);    //transmit to device
+   // Wire.write(byte(0x01));          //gain register
+   // Wire.write(byte(0x00));          //max range 0x00=43mm,0x01=86mm,0x18=1000mm,0x8C=6000mm
+   // Wire.endTransmission();
+   // tell sensor to read echos
+
    delay(1000);
 }
 
@@ -316,10 +338,10 @@ void setup()
 void loop()
 {
    // start task manager
-   //runner.execute();
+   runner.execute();
    //events();
 
- //  DEBUGPRINTLN("Read clock");
+   DEBUGPRINTLN("Read clock");
    RTCClock = rtc.now(); //read hardware clock
 
    if (secondChanged())
@@ -328,7 +350,7 @@ void loop()
    }
 
    OLED_Display.setCursor(0, 0);
-/*   
+   
    DEBUGPRINTLN("Read switches");
    ReadSwitches(&Switch_State);
 
@@ -342,78 +364,8 @@ void loop()
    DEBUGPRINTLN("Display sensor");
    DisplaySensor(&OLED_Display, &Sensor_Values);
 
-   //delay(10);
-   //yield();
-*/
-int Range;
-int Range2;
-int Light;
-int SRFStat;
-// tell sensor to read echos
-   //adr = 0xE0 i2c addressing is high 7 bit (right shift 1) so send 0x70
-Wire.beginTransmission(0x70);    //transmit to device
-Wire.write(byte(0x00));          //command register
-Wire.write(byte(0X50));          //0x50=inches, 0x51=cent; 0x52=microsec
-Wire.endTransmission();
-
-
-//wait for reading
-//delay(70);                       //wait for return, max 65ms
-Wire.beginTransmission(0x70);    //transmit to device
-Wire.write(byte(0x00));          //command register
-Wire.endTransmission();
-
-do
-{
-Wire.requestFrom(0x70,0);
-if (Wire.available())
-{
-SRFStat = Wire.read();
-}
-OLED_Display.print("SRFStat:" + SRFStat);
-OLED_Display.display();
-} while (SRFStat = 255);
-
-Wire.beginTransmission(0x70);    //transmit to device
-Wire.write(byte(0x01));          //light register
-Wire.endTransmission();
-
-Wire.requestFrom(0x70,1);     // read two register hi and low buyte
-if (Wire.available())
-{
-   Light = Wire.read();
-   //Light = Light << 8;
-   //Light |= Wire.read();
-   OLED_Display.println(Light);
-}   
-//goto firsst echo register
-Wire.beginTransmission(0x70);
-Wire.write(byte(0x02));       //high byte
-Wire.endTransmission();
-//get values
-Wire.requestFrom(0x70,2);     // read two registers hi and low buyte
-if (2<=Wire.available())
-{
-   Range = Wire.read();
-   Range = Range << 8;
-   Range |= Wire.read();
-   OLED_Display.println(Range);
-}
-// Wire.beginTransmission(0x70);
-// Wire.write(byte(0x02));       //high byte
-// Wire.endTransmission();
-// //get values
-// Wire.requestFrom(0x70,4);     // read two registers hi and low buyte
-// if (2<=Wire.available())
-// {
-//    Range2 = Wire.read();
-//    Range2 = Range2 << 8;
-//    Range2 |= Wire.read();
-//    OLED_Display.println(Range2);
-// }
-
-
-
+   OLED_Light(&OLED_Display, Light);
+   OLED_Range(&OLED_Display, &SRFDist);
 
    OLED_Display.display(); // update OLED_Display
    //delay(2000);
@@ -425,4 +377,7 @@ void sensor_update()
    ReadSensor(&bme, &Sensor_Values);
    DEBUGPRINTLN("Write SD**************");
    Refresh_SD(&RTCClock, &Sensor_Values);
+   SRFPing();
+   Light = SRFLight();
+   SRFDistance(&SRFDist);
 }

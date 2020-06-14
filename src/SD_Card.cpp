@@ -223,6 +223,7 @@ void Refresh_SD(DateTime *RTCClk, BME_Sensor *SenVal)
     {
         Serial.println("File Error");
     }
+/*    
     // re-open the file for reading:
     myFile = SD.open("/datalog.txt");
     if (myFile)
@@ -242,6 +243,7 @@ void Refresh_SD(DateTime *RTCClk, BME_Sensor *SenVal)
         // if the file didn't open, print an error:
         Serial.println("error opening");
     }
+*/    
 }
 
 /* examples

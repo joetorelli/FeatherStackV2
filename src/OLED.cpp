@@ -3,6 +3,8 @@
 //#include "settings.h"
 //#include "sensor_readings.h"
 
+
+
 //read and display button press
 void DisplaySwitches(Adafruit_SSD1306 *Disp, OLED_SW *SS)
 { //line 1
@@ -99,7 +101,7 @@ void OLED_Day(Adafruit_SSD1306 *Disp, DateTime *RTCClk)
 
 void DisplaySensor(Adafruit_SSD1306 *Disp, BME_Sensor *SenVal) //Adafruit_BME280 *bme)
 {                                                              //line 3
-    Disp->println();
+    //Disp->println();
     //digitalWrite(UpdateLED, HIGH);
 
     // Temperature
@@ -116,7 +118,7 @@ void DisplaySensor(Adafruit_SSD1306 *Disp, BME_Sensor *SenVal) //Adafruit_BME280
     DEBUGPRINTLN("%");
 
     Disp->print(SenVal->f_humidity);
-    Disp->print("% ");
+    Disp->println("% ");
     /*
     // Pressure
     //print to serial port
@@ -147,4 +149,18 @@ void DisplaySensor(Adafruit_SSD1306 *Disp, BME_Sensor *SenVal) //Adafruit_BME280
     //digitalWrite(UpdateLED, LOW);
     //print to serial port
     //DEBUGPRINTLN("-----v2----");
+}
+
+void OLED_Light(Adafruit_SSD1306 *Disp, int LT)
+{
+
+    Disp->print("L:");
+    Disp->print(LT);
+}
+
+void OLED_Range(Adafruit_SSD1306 *Disp, SRFRanges *Rngs)
+{
+    Disp->print(" Rng: "); 
+    Disp->print(Rngs->Range);
+    Disp->print("in");
 }
