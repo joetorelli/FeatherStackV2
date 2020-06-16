@@ -72,12 +72,12 @@ void setup()
 
    /************* set up task runner  *************/
    runner.init();
-   runner.addTask(t1_Update);
+   runner.addTask(t1_Update);    //for sensors
    //runner.addTask(t2_clock);
-   runner.addTask(t3_SDCard);
-   t1_Update.enable();
+   runner.addTask(t3_SDCard);    //for SD card
+   t1_Update.enable();           //for sensors
    //t2_clock.enable();
-   t3_SDCard.enable();
+   t3_SDCard.enable();           //for SD card
 
    /********************* oled  ********************/
    // SSD1306_SWITCHCAPVCC = generate OLED_Display voltage from 3.3V internally
